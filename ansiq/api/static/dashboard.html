@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnsiQ Dashboard</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d2e;
+    --surface2: #232742;
+    --surface3: #2a2f4a;
+    --border: #2d3154;
+    --text: #e2e4f0;
+    --text-dim: #8888a0;
+    --primary: #6c5ce7;
+    --primary-hover: #7c6ff8;
+    --green: #00b894;
+    --green-bg: rgba(0,184,148,0.12);
+    --red: #ff6b6b;
+    --red-bg: rgba(255,107,107,0.12);
+    --yellow: #fdcb6e;
+    --cyan: #00cec9;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --transition: 0.2s ease;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar .logo {
+    padding: 0 20px 20px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+  .sidebar .logo span { color: var(--cyan); }
+  .sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 14px;
+    transition: all var(--transition);
+    border-left: 3px solid transparent;
+  }
+  .sidebar nav a:hover { color: var(--text); background: var(--surface2); }
+  .sidebar nav a.active {
+    color: var(--primary);
+    background: var(--surface2);
+    border-left-color: var(--primary);
+  }
+  .sidebar .version {
+    margin-top: auto;
+    padding: 12px 20px;
+    font-size: 11px;
+    color: var(--text-dim);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sidebar .version .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .sidebar .version .dot.online { background: var(--green); }
+  .sidebar .version .dot.offline { background: var(--red); }
+  .sidebar .version .dot.loading { background: var(--yellow); animation: pulse 1s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+  /* ── Main ── */
+  .main {
+    flex: 1;
+    padding: 28px 32px;
+    overflow-y: auto;
+    max-height: 100vh;
+  }
+  .page { display: none; }
+  .page.active { display: block; }
+  h1 { font-size: 24px; margin-bottom: 20px; font-weight: 600; }
+  h2 { font-size: 18px; margin-bottom: 12px; color: var(--text-dim); font-weight: 500; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: border-color var(--transition);
+  }
+  .card:hover { border-color: var(--surface3); }
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  /* ── Stats Grid ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    text-align: center;
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(108,92,231,0.15);
+  }
+  .stat-card .value { font-size: 32px; font-weight: 700; color: var(--primary); }
+  .stat-card .label { font-size: 12px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-card .icon-bg {
+    position: absolute;
+    top: -10px; right: -10px;
+    font-size: 48px;
+    opacity: 0.04;
+    pointer-events: none;
+  }
+
+  /* ── Forms ── */
+  input, textarea, select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 12px;
+    transition: border-color var(--transition);
+  }
+  input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(108,92,231,0.15); }
+  textarea { resize: vertical; min-height: 60px; font-family: inherit; }
+  label { font-size: 13px; color: var(--text-dim); margin-bottom: 4px; display: block; font-weight: 500; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 2px 12px rgba(108,92,231,0.3); }
+  .btn-danger { background: var(--red); color: white; }
+  .btn-danger:hover { background: #ff5252; box-shadow: 0 2px 12px rgba(255,107,107,0.3); }
+  .btn-secondary { background: var(--surface2); color: var(--text); }
+  .btn-secondary:hover { background: var(--surface3); }
+  .btn-sm { padding: 4px 12px; font-size: 12px; }
+  .btn-icon { padding: 6px; min-width: 32px; justify-content: center; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  th {
+    color: var(--text-dim);
+    font-weight: 500;
+    background: var(--surface2);
+    position: sticky;
+    top: 0;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  td .actions { display: flex; gap: 4px; }
+
+  /* ── Chat ── */
+  .chat-messages {
+    height: 400px;
+    overflow-y: auto;
+    padding: 16px;
+    background: var(--surface2);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+    scroll-behavior: smooth;
+  }
+  .chat-msg { margin-bottom: 12px; padding: 10px 14px; border-radius: var(--radius-lg); max-width: 80%; animation: msgIn 0.2s ease; }
+  @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .chat-msg.user { background: var(--primary); margin-left: auto; }
+  .chat-msg.assistant { background: var(--surface); border: 1px solid var(--border); }
+  .chat-msg .role { font-size: 11px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+  .chat-msg .content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .chat-input { display: flex; gap: 8px; }
+  .chat-input input { margin-bottom: 0; flex: 1; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-yellow { background: rgba(253,203,110,0.15); color: var(--yellow); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-purple { background: rgba(108,92,231,0.15); color: var(--primary); }
+
+  /* ── Loading ── */
+  .loading-slot { display: inline-flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: 13px; }
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .spinner-lg { width: 24px; height: 24px; border-width: 3px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    gap: 12px;
+    color: var(--text-dim);
+  }
+
+  /* ── Toast ── */
+  .toast-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    font-size: 14px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: auto;
+    animation: toastIn 0.3s ease;
+    max-width: 400px;
+  }
+  .toast.toast-out { animation: toastOut 0.3s ease forwards; }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(20px); } }
+  .toast.success { border-color: var(--green); }
+  .toast.error { border-color: var(--red); }
+  .toast .toast-icon { font-size: 16px; }
+
+  /* ── Confirm Modal ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    min-width: 360px;
+    max-width: 480px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    animation: modalIn 0.2s ease;
+  }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  .modal h3 { margin-bottom: 8px; }
+  .modal p { color: var(--text-dim); font-size: 14px; line-height: 1.5; margin-bottom: 20px; }
+  .modal .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* ── Utilities ── */
+  .flex { display: flex; gap: 12px; }
+  .flex-wrap { flex-wrap: wrap; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .mt-12 { margin-top: 12px; }
+  .mb-12 { margin-bottom: 12px; }
+  .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .empty .empty-icon { font-size: 32px; margin-bottom: 8px; }
+  .error-box {
+    background: var(--red-bg);
+    border: 1px solid var(--red);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    color: var(--red);
+    font-size: 13px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease infinite;
+    border-radius: 4px;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .text-mono { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; font-size: 12px; }
+  pre { font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace; }
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<div class="sidebar">
+  <div class="logo">Ansi<span>Q</span></div>
+  <nav>
+    <a href="#" data-page="overview" class="active">📊 Overview</a>
+    <a href="#" data-page="agents">🤖 Agents</a>
+    <a href="#" data-page="chat">💬 Chat</a>
+    <a href="#" data-page="crews">👥 Crews</a>
+    <a href="#" data-page="skills">⚡ Skills</a>
+    <a href="#" data-page="memory">🧠 Memory</a>
+    <a href="#" data-page="knowledge">📚 Knowledge</a>
+  </nav>
+  <div class="version" id="versionInfo">
+    <span class="dot loading" id="statusDot"></span>
+    <span id="versionText">Connecting...</span>
+  </div>
+  <div style="padding:8px 20px;border-top:1px solid var(--border)">
+    <button class="btn btn-sm btn-secondary" onclick="showApiKeyForm()" style="width:100%;font-size:11px">🔑 Set API Key</button>
+  </div>
+  <div id="apiKeyForm" style="display:none;padding:8px 20px;border-top:1px solid var(--border)">
+    <input id="apiKeyInput" type="password" placeholder="sk-..." style="margin-bottom:6px;font-size:11px;padding:6px 8px" value="">
+    <div class="flex gap-8">
+      <button class="btn btn-sm btn-primary" onclick="saveApiKey()" style="font-size:11px">Save</button>
+      <button class="btn btn-sm btn-secondary" onclick="hideApiKeyForm()" style="font-size:11px">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Content ── -->
+<div class="main">
+
+  <!-- ════ Overview ════ -->
+  <div id="page-overview" class="page active">
+    <h1>Overview</h1>
+    <div class="stats-grid" id="overviewStats">
+      <div class="stat-card">
+        <div class="icon-bg">🤖</div>
+        <div class="value" id="statAgents"><span class="spinner"></span></div>
+        <div class="label">Agents</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon-bg">👥</div>
+        <div class="value" id="statCrews"><span class="spinner"></span></div>
+        <div class="label">Crews</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon-bg">🧠</div>
+        <div class="value" id="statMemory"><span class="spinner"></span></div>
+        <div class="label">Memories</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon-bg">📚</div>
+        <div class="value" id="statChunks"><span class="spinner"></span></div>
+        <div class="label">Knowledge Chunks</div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Quick Start</h2>
+      <p style="color:var(--text-dim);line-height:1.8;font-size:14px">
+        1. <strong>Create an agent</strong> in the Agents tab<br>
+        2. <strong>Chat with it</strong> in the Chat tab<br>
+        3. Or build a <strong>Crew</strong> in the Crews tab<br>
+        4. Browse past interactions in <strong>Memory</strong><br>
+        5. Add knowledge sources in <strong>Knowledge</strong>
+      </p>
+    </div>
+  </div>
+
+  <!-- ════ Agents ════ -->
+  <div id="page-agents" class="page">
+    <div class="flex-between mb-12">
+      <h1>Agents</h1>
+      <button class="btn btn-primary" onclick="showCreateAgent()">+ New Agent</button>
+    </div>
+
+    <div id="createAgentForm" class="card" style="display:none">
+      <div class="card-header"><h2>Create Agent</h2></div>
+      <label>Role *</label><input id="agentRole" placeholder="e.g., Senior Researcher">
+      <label>Goal *</label><input id="agentGoal" placeholder="e.g., Find and analyze information">
+      <label>Backstory</label><textarea id="agentBackstory" rows="3" placeholder="Background and personality..."></textarea>
+      <label>Model</label>
+      <select id="agentModel">
+        <option value="gpt-4o">GPT-4o</option>
+        <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+        <option value="llama3.2">Llama 3.2 (Ollama)</option>
+      </select>
+      <div class="flex gap-8">
+        <button class="btn btn-primary" id="createAgentBtn" onclick="createAgent()">Create</button>
+        <button class="btn btn-secondary" onclick="hideCreateAgent()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="agentsContent"><div class="loading-overlay"><span class="spinner spinner-lg"></span><span>Loading agents...</span></div></div>
+  </div>
+
+  <!-- ════ Chat ════ -->
+  <div id="page-chat" class="page">
+    <div class="flex-between mb-12">
+      <h1>Chat</h1>
+      <button class="btn btn-sm btn-secondary" onclick="clearChat()">Clear</button>
+    </div>
+    <div class="flex gap-8 mb-12 flex-wrap">
+      <select id="chatAgentSelect" style="max-width:320px"><option value="">Select an agent...</option></select>
+    </div>
+    <div class="card">
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty"><div class="empty-icon">💬</div>Select an agent and start chatting.</div>
+      </div>
+      <div class="chat-input">
+        <input id="chatInput" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendChat()" disabled>
+        <button class="btn btn-primary" id="sendBtn" onclick="sendChat()" disabled>Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ Crews ════ -->
+  <div id="page-crews" class="page">
+    <div class="flex-between mb-12">
+      <h1>Crews</h1>
+      <button class="btn btn-primary" onclick="showCreateCrew()">+ New Crew</button>
+    </div>
+
+    <div id="createCrewForm" class="card" style="display:none">
+      <div class="card-header"><h2>Create Crew</h2></div>
+      <label>Name *</label><input id="crewName" placeholder="e.g., Research Crew">
+      <label>Process</label>
+      <select id="crewProcess"><option value="pipeline">Pipeline (sequential)</option><option value="council">Council (hierarchical)</option></select>
+      <label>Agents (one per line: role, goal, model)</label>
+      <textarea id="crewAgents" rows="3" placeholder="Researcher, Find information, gpt-4o&#10;Writer, Write reports, gpt-4o"></textarea>
+      <label>Tasks (one per line: description, expected output, agent_role)</label>
+      <textarea id="crewTasks" rows="3" placeholder="Research AI trends, Findings report, Researcher&#10;Write summary, Summary document, Writer"></textarea>
+      <div class="flex gap-8">
+        <button class="btn btn-primary" id="createCrewBtn" onclick="createCrew()">Create</button>
+        <button class="btn btn-secondary" onclick="hideCreateCrew()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="crewsContent"><div class="loading-overlay"><span class="spinner spinner-lg"></span><span>Loading crews...</span></div></div>
+
+    <div class="card mt-12" id="crewResult" style="display:none">
+      <div class="card-header"><h2>Execution Result</h2><button class="btn btn-sm btn-secondary" onclick="closeCrewResult()">Close</button></div>
+      <pre id="crewResultOutput" style="white-space:pre-wrap;color:var(--text-dim);font-size:13px;max-height:300px;overflow-y:auto;background:var(--surface2);padding:12px;border-radius:var(--radius)"></pre>
+    </div>
+  </div>
+
+  <!-- ════ Skills ════ -->
+  <div id="page-skills" class="page">
+    <div class="flex-between mb-12">
+      <h1>Skills</h1>
+      <button class="btn btn-primary" onclick="showCreateSkill()">+ New Skill</button>
+    </div>
+
+    <div id="createSkillForm" class="card" style="display:none">
+      <div class="card-header"><h2>Register Skill</h2></div>
+      <label>Name *</label><input id="skillName" placeholder="e.g., data_analyzer">
+      <label>Description *</label><textarea id="skillDesc" rows="2" placeholder="What this skill does..."></textarea>
+      <label>Category</label>
+      <select id="skillCategory">
+        <option value="custom">Custom</option>
+        <option value="analysis">Analysis</option>
+        <option value="writing">Writing</option>
+        <option value="coding">Coding</option>
+        <option value="research">Research</option>
+      </select>
+      <div class="flex gap-8">
+        <button class="btn btn-primary" id="createSkillBtn" onclick="createSkill()">Register</button>
+        <button class="btn btn-secondary" onclick="hideCreateSkill()">Cancel</button>
+      </div>
+    </div>
+
+    <div id="skillsContent"><div class="loading-overlay"><span class="spinner spinner-lg"></span><span>Loading skills...</span></div></div>
+  </div>
+
+  <!-- ════ Memory ════ -->
+  <div id="page-memory" class="page">
+    <h1>Memory</h1>
+    <div class="flex gap-8 mb-12 flex-wrap">
+      <input id="memorySearch" placeholder="Search memories..." onkeydown="if(event.key==='Enter')searchMemory()" style="max-width:360px;margin:0">
+      <button class="btn btn-primary btn-sm" onclick="searchMemory()">Search</button>
+      <button class="btn btn-sm btn-secondary" onclick="loadMemory()">Recent</button>
+    </div>
+    <div class="card">
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
+        <div class="stat-card"><div class="value" id="memTotal"><span class="spinner"></span></div><div class="label">Total Memories</div></div>
+      </div>
+      <div id="memoryList"><div class="empty"><div class="empty-icon">🧠</div>No memories loaded.</div></div>
+    </div>
+  </div>
+
+  <!-- ════ Knowledge ════ -->
+  <div id="page-knowledge" class="page">
+    <h1>Knowledge</h1>
+    <div class="card">
+      <div class="card-header"><h2>Add Source</h2></div>
+      <label>Name *</label><input id="knName" placeholder="e.g., Documentation">
+      <label>Type</label>
+      <select id="knType" onchange="toggleKnowledgeType()">
+        <option value="text">Text</option><option value="url">URL</option>
+      </select>
+      <div id="knTextArea"><label>Content</label><textarea id="knContent" rows="4" placeholder="Enter text content..."></textarea></div>
+      <div id="knUrlArea" style="display:none"><label>URL</label><input id="knUrl" placeholder="https://example.com/doc"></div>
+      <button class="btn btn-primary btn-sm" id="addKnBtn" onclick="addKnowledge()">Add Source</button>
+    </div>
+
+    <div class="card mt-12">
+      <div class="card-header"><h2>Query</h2></div>
+      <div class="flex gap-8">
+        <input id="knQuery" placeholder="Search knowledge..." onkeydown="if(event.key==='Enter')queryKnowledge()">
+        <button class="btn btn-primary btn-sm" id="queryKnBtn" onclick="queryKnowledge()">Search</button>
+      </div>
+      <div id="knResults" class="mt-12"></div>
+    </div>
+
+    <div class="card mt-12">
+      <div class="card-header"><h2>Stats</h2></div>
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card"><div class="value" id="knChunks"><span class="spinner"></span></div><div class="label">Chunks</div></div>
+        <div class="stat-card"><div class="value" id="knSources"><span class="spinner"></span></div><div class="label">Sources</div></div>
+        <div class="stat-card"><div class="value" id="knVocab"><span class="spinner"></span></div><div class="label">Vocabulary</div></div>
+        <div class="stat-card"><div class="value" id="knEmbedded"><span class="spinner"></span></div><div class="label">Embedded</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast Container ── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ── Confirm Modal ── -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmMessage">Are you sure?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirmActionBtn" onclick="confirmAction()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = '/api';
+let state = { health: null, statsInterval: null, chatHistory: [], currentChatAgent: null, apiKey: localStorage.getItem('ansiq_api_key') || '' };
+
+// ═══════════════════════════════════════════════════════════════════
+// Navigation
+// ═══════════════════════════════════════════════════════════════════
+document.querySelectorAll('.sidebar nav a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.sidebar nav a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${a.dataset.page}`).classList.add('active');
+    // Load tab content on first visit
+    const page = a.dataset.page;
+    if (page === 'agents' && document.getElementById('agentsContent').querySelector('.loading-overlay')) reloadAgents();
+    if (page === 'crews' && document.getElementById('crewsContent').querySelector('.loading-overlay')) reloadCrews();
+    if (page === 'skills') reloadSkills();
+    if (page === 'memory') loadMemory();
+    if (page === 'knowledge') loadKnowledgeStats();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// API Helpers
+// ═══════════════════════════════════════════════════════════════════
+async function api(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...options.headers };
+  if (state.apiKey) {
+    headers['Authorization'] = `Bearer ${state.apiKey}`;
+  }
+  const resp = await fetch(`${BASE}${path}`, {
+    headers,
+    ...options,
+  });
+  if (resp.status === 401) {
+    showApiKeyForm();
+    throw new Error('API key required. Set it in the sidebar.');
+  }
+  if (!resp.ok) {
+    let msg;
+    try { const err = await resp.json(); msg = err.detail || resp.statusText; } catch { msg = resp.statusText; }
+    throw new Error(msg);
+  }
+  if (options.raw) return resp;
+  if (resp.status === 204) return null;
+  return resp.json();
+}
+
+// API Key management
+function showApiKeyForm() {
+  document.getElementById('apiKeyForm').style.display = 'block';
+  document.getElementById('apiKeyInput').focus();
+}
+function hideApiKeyForm() { document.getElementById('apiKeyForm').style.display = 'none'; }
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (key) {
+    state.apiKey = key;
+    localStorage.setItem('ansiq_api_key', key);
+    toast('API key saved');
+  } else {
+    state.apiKey = '';
+    localStorage.removeItem('ansiq_api_key');
+    toast('API key cleared');
+  }
+  hideApiKeyForm();
+  // Refresh all dashboard data with the new credentials
+  checkHealth();
+  loadOverview();
+  loadAgents();
+  loadCrews();
+  loadChatAgents();
+  loadKnowledgeStats();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Toast Notifications
+// ═══════════════════════════════════════════════════════════════════
+function toast(msg, type = 'success') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = type === 'error' ? '❌' : type === 'warning' ? '⚠️' : '✅';
+  el.innerHTML = `<span class="toast-icon">${icon}</span>${escapeHtml(msg)}`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('toast-out');
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Confirm Modal
+// ═══════════════════════════════════════════════════════════════════
+let _confirmCallback = null;
+function showConfirm(title, message, btnLabel, callback) {
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmActionBtn').textContent = btnLabel || 'Delete';
+  document.getElementById('confirmModal').classList.add('show');
+  _confirmCallback = callback;
+}
+function closeConfirm() {
+  document.getElementById('confirmModal').classList.remove('show');
+  _confirmCallback = null;
+}
+function confirmAction() {
+  if (_confirmCallback) _confirmCallback();
+  closeConfirm();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════════
+async function init() {
+  await checkHealth();
+  loadOverview();
+  loadChatAgents();
+  // Auto-refresh overview every 10s
+  state.statsInterval = setInterval(loadOverview, 10000);
+}
+init();
+
+async function checkHealth() {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('versionText');
+  try {
+    state.health = await api('/health');
+    dot.className = 'dot online';
+    text.textContent = `AnsiQ v${state.health.version} — Connected`;
+    // If connected, restore API key input value
+    if (state.apiKey) {
+      document.getElementById('apiKeyInput').value = state.apiKey;
+    }
+  } catch (e) {
+    if (e.message.includes('API key')) {
+      dot.className = 'dot offline';
+      text.textContent = 'API key required';
+    } else {
+      dot.className = 'dot offline';
+      text.textContent = 'Server unreachable';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Overview
+// ═══════════════════════════════════════════════════════════════════
+async function loadOverview() {
+  try {
+    const [agents, crews, mem, kn] = await Promise.all([
+      api('/agents').catch(() => null),
+      api('/crews').catch(() => null),
+      api('/memory/stats').catch(() => null),
+      api('/knowledge/stats').catch(() => null),
+    ]);
+    document.getElementById('statAgents').textContent = agents?.total ?? 'N/A';
+    document.getElementById('statCrews').textContent = crews?.total ?? 'N/A';
+    document.getElementById('statMemory').textContent = mem?.total_memories ?? 'N/A';
+    document.getElementById('statChunks').textContent = kn?.total_chunks ?? 'N/A';
+  } catch { /* stats will show spinners */ }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Agents
+// ═══════════════════════════════════════════════════════════════════
+async function reloadAgents() {
+  const container = document.getElementById('agentsContent');
+  container.innerHTML = '<div class="loading-overlay"><span class="spinner spinner-lg"></span><span>Loading agents...</span></div>';
+  await loadAgents();
+}
+
+async function loadAgents() {
+  const container = document.getElementById('agentsContent');
+  try {
+    const data = await api('/agents');
+    if (data.total === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🤖</div>No agents yet. Create one to get started.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>ID</th><th>Role</th><th>Model</th><th>Tools</th><th>Skills</th><th>Actions</th></tr></thead><tbody>${data.agents.map(a => `
+      <tr>
+        <td class="text-mono">${escapeHtml(a.id)}</td>
+        <td><strong>${escapeHtml(a.role)}</strong></td>
+        <td><span class="badge badge-purple">${escapeHtml(a.llm_model)}</span></td>
+        <td>${a.tools_count}</td>
+        <td>${a.skills_count}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-primary btn-sm" onclick="selectChatAgent('${escapeHtml(a.id)}')">Chat</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteAgent('${escapeHtml(a.id)}')">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>Failed to load agents<br><button class="btn btn-sm btn-secondary mt-12" onclick="reloadAgents()">Retry</button></div>`;
+  }
+}
+
+function showCreateAgent() {
+  document.getElementById('createAgentForm').style.display = 'block';
+  document.getElementById('createAgentForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideCreateAgent() { document.getElementById('createAgentForm').style.display = 'none'; }
+
+async function createAgent() {
+  const role = document.getElementById('agentRole').value.trim();
+  const goal = document.getElementById('agentGoal').value.trim();
+  if (!role || !goal) { toast('Role and Goal are required', 'error'); return; }
+  const btn = document.getElementById('createAgentBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    await api('/agents', { method: 'POST', body: JSON.stringify({
+      role, goal,
+      backstory: document.getElementById('agentBackstory').value.trim(),
+      llm_model: document.getElementById('agentModel').value,
+    })});
+    toast('Agent created!');
+    hideCreateAgent();
+    document.getElementById('agentRole').value = '';
+    document.getElementById('agentGoal').value = '';
+    document.getElementById('agentBackstory').value = '';
+    await loadAgents();
+    loadOverview();
+    loadChatAgents();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Create'; }
+}
+
+function confirmDeleteAgent(id) {
+  showConfirm('Delete Agent', `Are you sure you want to delete "${id}"? This cannot be undone.`, 'Delete', async () => {
+    try {
+      await api(`/agents/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      toast(`Agent "${id}" deleted`);
+      await loadAgents();
+      loadOverview();
+      loadChatAgents();
+    } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Chat
+// ═══════════════════════════════════════════════════════════════════
+async function loadChatAgents() {
+  try {
+    const data = await api('/agents');
+    const sel = document.getElementById('chatAgentSelect');
+    const currentVal = sel.value;
+    sel.innerHTML = '<option value="">Select an agent...</option>';
+    data.agents.forEach(a => {
+      sel.innerHTML += `<option value="${a.id}">${escapeHtml(a.role)} (${escapeHtml(a.llm_model)})</option>`;
+    });
+    if (currentVal && [...sel.options].some(o => o.value === currentVal)) sel.value = currentVal;
+    updateChatEnabled();
+  } catch { /* ignore */ }
+}
+
+function selectChatAgent(id) {
+  document.getElementById('chatAgentSelect').value = id;
+  document.querySelector('[data-page="chat"]').click();
+}
+
+function updateChatEnabled() {
+  const hasAgent = !!document.getElementById('chatAgentSelect').value;
+  document.getElementById('chatInput').disabled = !hasAgent;
+  document.getElementById('sendBtn').disabled = !hasAgent;
+}
+
+document.getElementById('chatAgentSelect').addEventListener('change', () => {
+  const newId = document.getElementById('chatAgentSelect').value;
+  if (newId !== state.currentChatAgent) {
+    state.currentChatAgent = newId;
+    state.chatHistory = [];
+    document.getElementById('chatMessages').innerHTML = '<div class="empty"><div class="empty-icon">💬</div>Select an agent and start chatting.</div>';
+  }
+  updateChatEnabled();
+});
+
+function clearChat() {
+  state.chatHistory = [];
+  document.getElementById('chatMessages').innerHTML = '<div class="empty"><div class="empty-icon">💬</div>Select an agent and start chatting.</div>';
+}
+
+async function sendChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  const agentId = document.getElementById('chatAgentSelect').value;
+  if (!msg || !agentId) return;
+
+  const msgsDiv = document.getElementById('chatMessages');
+  if (state.chatHistory.length === 0) msgsDiv.innerHTML = '';
+  state.currentChatAgent = agentId;
+
+  // User message
+  msgsDiv.innerHTML += `<div class="chat-msg user"><div class="role">You</div><div class="content">${escapeHtml(msg)}</div></div>`;
+  input.value = '';
+  input.disabled = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  // Assistant message (streaming)
+  const assistantDiv = document.createElement('div');
+  assistantDiv.className = 'chat-msg assistant';
+  assistantDiv.innerHTML = '<div class="role">Assistant</div><div class="content"><span class="spinner"></span></div>';
+  msgsDiv.appendChild(assistantDiv);
+  msgsDiv.scrollTop = msgsDiv.scrollHeight;
+
+  const contentDiv = assistantDiv.querySelector('.content');
+  let fullText = '';
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.apiKey) headers['Authorization'] = `Bearer ${state.apiKey}`;
+    const resp = await fetch(`${BASE}/agents/${encodeURIComponent(agentId)}/stream`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message: msg }),
+    });
+    if (resp.status === 401) { showApiKeyForm(); throw new Error('API key required'); }
+    if (!resp.ok) throw new Error('Stream failed');
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+      for (const line of lines) {
+        if (line.startsWith('event: token')) continue;
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          fullText += data;
+          contentDiv.textContent = fullText;
+          msgsDiv.scrollTop = msgsDiv.scrollHeight;
+        }
+      }
+    }
+  } catch (e) {
+    contentDiv.innerHTML = `Error: ${escapeHtml(e.message)}`;
+  }
+
+  if (!fullText) contentDiv.textContent = '(no response)';
+  state.chatHistory.push({ role: 'user', content: msg }, { role: 'assistant', content: fullText });
+  input.disabled = false;
+  document.getElementById('sendBtn').disabled = false;
+  input.focus();
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Crews
+// ═══════════════════════════════════════════════════════════════════
+async function reloadCrews() {
+  const container = document.getElementById('crewsContent');
+  container.innerHTML = '<div class="loading-overlay"><span class="spinner spinner-lg"></span><span>Loading crews...</span></div>';
+  await loadCrews();
+}
+
+async function loadCrews() {
+  const container = document.getElementById('crewsContent');
+  try {
+    const data = await api('/crews');
+    if (data.total === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">👥</div>No crews yet. Create one to get started.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>ID</th><th>Agents</th><th>Tasks</th><th>Process</th><th>Actions</th></tr></thead><tbody>${data.crews.map(c => `
+      <tr>
+        <td class="text-mono">${escapeHtml(c.id)}</td>
+        <td><span class="badge badge-purple">${c.agents_count}</span></td>
+        <td>${c.tasks_count}</td>
+        <td><span class="badge ${c.process === 'council' ? 'badge-yellow' : 'badge-green'}">${escapeHtml(c.process)}</span></td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-primary btn-sm" onclick="runCrew('${escapeHtml(c.id)}')">Run</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteCrew('${escapeHtml(c.id)}')">Delete</button>
+          </div>
+        </td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>Failed to load crews<br><button class="btn btn-sm btn-secondary mt-12" onclick="reloadCrews()">Retry</button></div>`;
+  }
+}
+
+function showCreateCrew() {
+  document.getElementById('createCrewForm').style.display = 'block';
+  document.getElementById('createCrewForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideCreateCrew() { document.getElementById('createCrewForm').style.display = 'none'; }
+
+async function createCrew() {
+  const name = document.getElementById('crewName').value.trim();
+  if (!name) { toast('Name is required', 'error'); return; }
+  const agentLines = document.getElementById('crewAgents').value.trim().split('\n').filter(l => l.trim());
+  const taskLines = document.getElementById('crewTasks').value.trim().split('\n').filter(l => l.trim());
+  if (!agentLines.length) { toast('At least one agent required', 'error'); return; }
+  if (!taskLines.length) { toast('At least one task required', 'error'); return; }
+
+  const agents = agentLines.map(l => {
+    const p = l.split(',').map(x => x.trim());
+    return { role: p[0], goal: p[1] || 'Work', llm_model: p[2] || 'gpt-4o' };
+  });
+  const tasks = taskLines.map(l => {
+    const p = l.split(',').map(x => x.trim());
+    return { description: p[0], expected_output: p[1] || 'Done', agent_role: p[2] || null };
+  });
+
+  const btn = document.getElementById('createCrewBtn');
+  btn.disabled = true; btn.textContent = 'Creating...';
+  try {
+    await api('/crews', { method: 'POST', body: JSON.stringify({
+      name, agents, tasks,
+      process: document.getElementById('crewProcess').value,
+    })});
+    toast('Crew created!');
+    hideCreateCrew();
+    document.getElementById('crewName').value = '';
+    document.getElementById('crewAgents').value = '';
+    document.getElementById('crewTasks').value = '';
+    await loadCrews();
+    loadOverview();
+    loadChatAgents();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Create'; }
+}
+
+async function runCrew(id) {
+  try {
+    document.getElementById('crewResult').style.display = 'block';
+    document.getElementById('crewResultOutput').textContent = 'Executing...';
+    const result = await api(`/crews/${encodeURIComponent(id)}/run`, {
+      method: 'POST', body: JSON.stringify({ inputs: {} })
+    });
+    document.getElementById('crewResultOutput').textContent = JSON.stringify(result, null, 2);
+    document.getElementById('crewResult').scrollIntoView({ behavior: 'smooth' });
+    toast('Crew execution complete');
+  } catch (e) {
+    document.getElementById('crewResultOutput').textContent = 'Error: ' + e.message;
+    toast('Run failed: ' + e.message, 'error');
+  }
+}
+
+function closeCrewResult() { document.getElementById('crewResult').style.display = 'none'; }
+
+function confirmDeleteCrew(id) {
+  showConfirm('Delete Crew', `Are you sure you want to delete "${id}"? This cannot be undone.`, 'Delete', async () => {
+    try {
+      await api(`/crews/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      toast(`Crew "${id}" deleted`);
+      await loadCrews();
+      loadOverview();
+    } catch (e) { toast('Delete failed: ' + e.message, 'error'); }
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Skills
+// ═══════════════════════════════════════════════════════════════════
+async function reloadSkills() {
+  const container = document.getElementById('skillsContent');
+  container.innerHTML = '<div class="loading-overlay"><span class="spinner spinner-lg"></span><span>Loading skills...</span></div>';
+  await loadSkills();
+}
+
+async function loadSkills() {
+  const container = document.getElementById('skillsContent');
+  try {
+    const data = await api('/skills');
+    if (data.total === 0) {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">⚡</div>No skills registered. Create one to get started.</div>';
+      return;
+    }
+    container.innerHTML = `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Category</th><th>Version</th><th>Description</th></tr></thead><tbody>${data.skills.map(s => `
+      <tr>
+        <td><strong>${escapeHtml(s.name)}</strong></td>
+        <td><span class="badge badge-purple">${escapeHtml(s.category || 'general')}</span></td>
+        <td>${s.version || '1.0'}</td>
+        <td style="color:var(--text-dim)">${escapeHtml(s.description || '')}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>Failed to load skills<br><button class="btn btn-sm btn-secondary mt-12" onclick="reloadSkills()">Retry</button></div>`;
+  }
+}
+
+function showCreateSkill() {
+  document.getElementById('createSkillForm').style.display = 'block';
+  document.getElementById('createSkillForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function hideCreateSkill() { document.getElementById('createSkillForm').style.display = 'none'; }
+
+async function createSkill() {
+  const name = document.getElementById('skillName').value.trim();
+  const description = document.getElementById('skillDesc').value.trim();
+  if (!name || !description) { toast('Name and description are required', 'error'); return; }
+  const btn = document.getElementById('createSkillBtn');
+  btn.disabled = true; btn.textContent = 'Registering...';
+  try {
+    await api('/skills', { method: 'POST', body: JSON.stringify({
+      name, description,
+      category: document.getElementById('skillCategory').value,
+    })});
+    toast('Skill registered!');
+    hideCreateSkill();
+    document.getElementById('skillName').value = '';
+    document.getElementById('skillDesc').value = '';
+    await loadSkills();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Register'; }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Memory
+// ═══════════════════════════════════════════════════════════════════
+async function loadMemory() {
+  try {
+    const data = await api('/memory');
+    document.getElementById('memTotal').textContent = data.total || 0;
+    displayMemories(data.memories || []);
+  } catch {
+    document.getElementById('memTotal').textContent = 'N/A';
+    document.getElementById('memoryList').innerHTML = '<div class="empty"><div class="empty-icon">⚠️</div>Failed to load memories<br><button class="btn btn-sm btn-secondary mt-12" onclick="loadMemory()">Retry</button></div>';
+  }
+}
+
+async function searchMemory() {
+  const q = document.getElementById('memorySearch').value.trim();
+  if (!q) { loadMemory(); return; }
+  try {
+    const data = await api('/memory/search', { method: 'POST', body: JSON.stringify({ query: q }) });
+    document.getElementById('memTotal').textContent = data.total || 0;
+    displayMemories(data.memories || []);
+  } catch (e) { toast('Search failed: ' + e.message, 'error'); }
+}
+
+function displayMemories(memories) {
+  const div = document.getElementById('memoryList');
+  if (!memories.length) {
+    div.innerHTML = '<div class="empty"><div class="empty-icon">🧠</div>No memories found.</div>';
+    return;
+  }
+  div.innerHTML = memories.map(m => `
+    <div class="card" style="padding:12px;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">
+        <span class="badge badge-purple">#${m.rowid}</span>
+        ${m.timestamp ? `<span style="margin-left:4px">· ${escapeHtml(m.timestamp)}</span>` : ''}
+        ${m.agent_id ? `<span style="margin-left:4px">· ${escapeHtml(m.agent_id)}</span>` : ''}
+      </div>
+      <div style="font-size:13px;line-height:1.5">${escapeHtml(m.content || m.summary || '')}</div>
+      ${m.tags && m.tags.length ? `<div style="margin-top:6px">${m.tags.map(t => `<span class="badge badge-green" style="margin-right:4px">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Knowledge
+// ═══════════════════════════════════════════════════════════════════
+async function loadKnowledgeStats() {
+  try {
+    const s = await api('/knowledge/stats');
+    document.getElementById('knChunks').textContent = s.total_chunks ?? 'N/A';
+    document.getElementById('knSources').textContent = s.total_sources ?? 'N/A';
+    document.getElementById('knVocab').textContent = s.vocabulary_size ?? 'N/A';
+    document.getElementById('knEmbedded').textContent = s.embedded_chunks ?? 'N/A';
+  } catch { /* keep spinners */ }
+}
+
+function toggleKnowledgeType() {
+  const t = document.getElementById('knType').value;
+  document.getElementById('knTextArea').style.display = t === 'text' ? 'block' : 'none';
+  document.getElementById('knUrlArea').style.display = t === 'url' ? 'block' : 'none';
+}
+
+async function addKnowledge() {
+  const name = document.getElementById('knName').value.trim();
+  const type = document.getElementById('knType').value;
+  if (!name) { toast('Name is required', 'error'); return; }
+  const body = { name, source_type: type };
+  if (type === 'text') body.content = document.getElementById('knContent').value.trim();
+  else body.url = document.getElementById('knUrl').value.trim();
+
+  const btn = document.getElementById('addKnBtn');
+  btn.disabled = true; btn.textContent = 'Adding...';
+  try {
+    await api('/knowledge/sources', { method: 'POST', body: JSON.stringify(body) });
+    toast('Knowledge source added!');
+    document.getElementById('knName').value = '';
+    document.getElementById('knContent').value = '';
+    document.getElementById('knUrl').value = '';
+    loadKnowledgeStats();
+    loadOverview();
+  } catch (e) { toast('Failed: ' + e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Add Source'; }
+}
+
+async function queryKnowledge() {
+  const q = document.getElementById('knQuery').value.trim();
+  if (!q) return;
+  const div = document.getElementById('knResults');
+  div.innerHTML = '<div class="loading-slot"><span class="spinner"></span> Searching...</div>';
+
+  try {
+    const data = await api('/knowledge/query', { method: 'POST', body: JSON.stringify({ query: q }) });
+    if (!data.results.length) {
+      div.innerHTML = '<div class="empty"><div class="empty-icon">📚</div>No results found.</div>';
+      return;
+    }
+    div.innerHTML = data.results.map(r => `
+      <div class="card" style="padding:12px;margin-bottom:8px">
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">
+          ${r.source ? `<span class="badge badge-green">${escapeHtml(r.source)}</span>` : ''}
+          <span style="margin-left:4px">· score: ${typeof r.score === 'number' ? r.score.toFixed(3) : r.score}</span>
+        </div>
+        <div style="font-size:13px;line-height:1.5">${escapeHtml(r.text)}</div>
+      </div>`).join('');
+  } catch (e) {
+    div.innerHTML = `<div class="error-box">Query failed: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// Utilities
+// ═══════════════════════════════════════════════════════════════════
+function escapeHtml(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

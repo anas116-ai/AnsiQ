@@ -1,0 +1,23 @@
+# ── AnsiQ — .dockerignore ────────────────────────────────────────
+
+.git
+.gitignore
+.gitattributes
+__pycache__
+*.pyc
+*.pyo
+.env
+.env.*
+*.egg-info/
+dist/
+build/
+*.db
+*.sqlite
+tests/
+docs/
+node_modules/
+.venv/
+.idea/
+.vscode/
+*.md
+LICENSE

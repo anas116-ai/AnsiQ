@@ -1,0 +1,157 @@
+[project]
+name = "ansiq"
+version = "0.1.0"
+description = "Intelligent Agent Orchestration Framework — multi-agent orchestration, persistent memory, skill learning, universal LLM support"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+keywords = ["ai", "agents", "multi-agent", "orchestration", "llm", "framework"]
+authors = [
+    { name = "AnsiQ Team" },
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pydantic>=2.0",
+    "httpx>=0.27",
+    "pyyaml>=6.0",
+    "rich>=13.0",
+    "prompt-toolkit>=3.0",
+    "aiofiles>=24.0",
+    "jinja2>=3.0",
+]
+
+[project.optional-dependencies]
+all = [
+    "ansiq[openai,ollama,anthropic,huggingface,local,telegram,discord,slack,docker,ssh,saas,monitoring,loadtest]",
+]
+openai = [
+    "openai>=1.0",
+]
+ollama = [
+    "httpx>=0.27",
+]
+anthropic = [
+    "anthropic>=0.30",
+]
+huggingface = [
+    "huggingface-hub>=0.20",
+]
+local = [
+    "sentence-transformers>=3.0",
+]
+embeddings = [
+    "ansiq[local]",
+]
+telegram = [
+    "python-telegram-bot>=20.0",
+]
+discord = [
+    "discord.py>=2.3",
+]
+slack = [
+    "slack-sdk>=3.0",
+]
+docker = [
+    "docker>=7.0",
+]
+ssh = [
+    "asyncssh>=2.14",
+]
+
+saas = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+    "redis>=5.0",
+    "sentry-sdk>=2.0",
+    "structlog>=24.0",
+    "python-dotenv>=1.0",
+    "stripe>=10.0",
+    # Critical: explicitly pin the auth/email deps the SaaS layer
+    # imports but the rest of the framework doesn't need.
+    "pyjwt>=2.8",
+    "bcrypt>=4.1",
+    "aiosmtplib>=3.0",
+    "sendgrid>=6.11",
+    "boto3>=1.34",
+    "prometheus-client>=0.20",
+    "slowapi>=0.1.9",
+    "email-validator>=2.1",
+    # At-rest encryption of webhook secrets and MFA seeds.
+    "cryptography>=42.0",
+    # TOTP / MFA.
+    "pyotp>=2.9",
+    "qrcode[pil]>=7.4",
+]
+
+monitoring = [
+    "prometheus-client>=0.20",
+    "psutil>=5.0",
+]
+loadtest = [
+    "locust>=2.20",
+]
+
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.0",
+    "ruff>=0.1",
+    "pre-commit>=3.0",
+    "bandit>=1.7",
+    "pip-audit>=2.6",
+]
+
+[project.scripts]
+ansiq = "ansiq.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["ansiq*", "saas*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B", "S", "UP"]
+ignore = [
+    "B008", "B027", "B904",
+    "S101", "E501",
+    "E402", "S110", "S112",
+    "S102", "S604", "S324",
+    "S104", "S105", "S108",
+    "N818", "S608", "F401", "UP046",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["E501", "S101", "E701", "E702", "E731", "F841"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::pytest.PytestUnraisableExceptionWarning",
+    "ignore::DeprecationWarning:chromadb.*",
+    # The aiosqlite background ``_connection_worker_thread`` outlives the
+    # per-test event loop. The thread raises ``Event loop is closed`` at
+    # interpreter shutdown — this is harmless third-party teardown noise,
+    # not a test failure.
+    "ignore::pytest.PytestUnhandledThreadExceptionWarning:aiosqlite.*",
+    "ignore:Exception in thread.*_connection_worker_thread.*:pytest.PytestUnhandledThreadExceptionWarning",
+]

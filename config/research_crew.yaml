@@ -1,0 +1,67 @@
+# Example: Research Crew Configuration
+# Run with: ansiq run config/research_crew.yaml -i topic="AI Agents" depth=detailed
+crew:
+  name: research_crew
+  process: pipeline
+  verbose: true
+
+  agents:
+    researcher:
+      role: Senior Research Analyst
+      goal: Conduct thorough research on the given topic
+      backstory: >
+        You are an experienced research analyst with expertise
+        in finding and synthesizing information from multiple sources.
+        You excel at creating comprehensive research reports.
+      llm_provider: openai
+      llm_model: gpt-4o
+      temperature: 0.5
+
+    writer:
+      role: Technical Writer
+      goal: Transform research into clear, engaging content
+      backstory: >
+        You are a skilled technical writer who can take complex
+        information and present it in an accessible, well-structured format.
+      llm_provider: ollama
+      llm_model: llama3.2
+      temperature: 0.7
+
+    reviewer:
+      role: Quality Reviewer
+      goal: Ensure accuracy and quality of the final output
+      backstory: >
+        You are a meticulous reviewer who catches errors,
+        ensures factual accuracy, and improves overall quality.
+      llm_provider: openai
+      llm_model: gpt-4o-mini
+      temperature: 0.3
+
+  tasks:
+    - description: >
+        Research the topic "{topic}" in {depth} detail.
+        Find key concepts, recent developments, and important facts.
+        Provide a comprehensive research summary.
+      expected_output: >
+        A detailed research summary with key findings, sources, and analysis
+      agent: researcher
+
+    - description: >
+        Transform the research findings into a well-structured article.
+        Make it engaging and accessible while maintaining accuracy.
+        Include an introduction, main body sections, and conclusion.
+      expected_output: >
+        A polished article ready for publication
+      agent: writer
+      context:
+        - Research the topic "{topic}" in {depth} detail.
+
+    - description: >
+        Review the article for accuracy, clarity, and quality.
+        Check for factual errors, improve readability, and ensure
+        the content meets high standards.
+      expected_output: >
+        A reviewed and improved final article with review notes
+      agent: reviewer
+      context:
+        - Transform the research findings into a well-structured article.

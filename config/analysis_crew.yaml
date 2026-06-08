@@ -1,0 +1,56 @@
+# Example: Council-Style Analysis Crew
+# Uses hierarchical process with a manager delegating to specialists
+# Run: ansiq run config/analysis_crew.yaml -i data="your data here"
+
+crew:
+  name: analysis_crew
+  process: council
+  verbose: true
+  manager_agent: coordinator
+
+  agents:
+    coordinator:
+      role: Analysis Coordinator
+      goal: Coordinate analysis efforts and synthesize findings
+      backstory: >
+        You are an experienced project coordinator who excels at
+        breaking down complex problems and delegating to specialists.
+      llm_provider: openai
+      llm_model: gpt-4o
+
+    data_scientist:
+      role: Data Scientist
+      goal: Extract insights from data using statistical analysis
+      backstory: >
+        You are a data scientist skilled at finding patterns,
+        trends, and insights in complex datasets.
+      llm_provider: ollama
+      llm_model: llama3.2
+
+    domain_expert:
+      role: Domain Expert
+      goal: Provide domain-specific context and validation
+      backstory: >
+        You have deep expertise in the subject matter and can
+        provide valuable context and validate findings.
+      llm_provider: openai
+      llm_model: gpt-4o-mini
+
+  tasks:
+    - description: >
+        Analyze the following data and extract key patterns:
+        {data}
+      expected_output: Data analysis findings
+      agent: data_scientist
+
+    - description: >
+        Validate the findings against domain knowledge.
+        Provide additional context and identify any gaps.
+      expected_output: Domain validation and context
+      agent: domain_expert
+
+    - description: >
+        Synthesize all findings into a comprehensive analysis report.
+        Include data insights, domain context, and recommendations.
+      expected_output: Final analysis report
+      agent: coordinator
