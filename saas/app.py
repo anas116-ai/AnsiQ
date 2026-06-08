@@ -42,7 +42,7 @@ logger = logging.getLogger("ansiq.saas")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Application lifecycle: startup/shutdown.
 
     Logging is configured *first* so every subsequent log line uses the
