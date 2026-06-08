@@ -33,7 +33,7 @@ dependencies = [
 
 [project.optional-dependencies]
 all = [
-    "ansiq[openai,ollama,anthropic,huggingface,local,telegram,discord,slack,docker,ssh,saas,monitoring,loadtest]",
+    "ansiq[openai,ollama,anthropic,huggingface,local,telegram,discord,slack,docker,ssh,saas,monitoring,loadtest,embeddings,vectordb]",
 ]
 openai = [
     "openai>=1.0",
@@ -52,6 +52,9 @@ local = [
 ]
 embeddings = [
     "ansiq[local]",
+]
+vectordb = [
+    "chromadb>=0.3",
 ]
 telegram = [
     "python-telegram-bot>=20.0",
@@ -95,6 +98,8 @@ saas = [
     # TOTP / MFA.
     "pyotp>=2.9",
     "qrcode[pil]>=7.4",
+    # Required for async SQLite database operations in tests.
+    "aiosqlite>=0.20",
 ]
 
 monitoring = [
