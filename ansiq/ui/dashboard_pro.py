@@ -39,6 +39,28 @@ try:
 except ImportError:
     STREAMLIT_AVAILABLE = False
 
+    # Provide a tiny stand-in so module-level ``@st.cache_data(...)``
+    # decorators (which are evaluated at function-definition time) do
+    # not raise ``NameError: name 'st' is not defined`` when streamlit
+    # is not installed. The decorated functions are only ever called
+    # from inside ``main()`` which short-circuits on
+    # ``STREAMLIT_AVAILABLE``, so this stub is never invoked at runtime.
+    class _StreamlitStub:  # pragma: no cover - defensive guard
+        def __getattr__(self, name):
+            def _decorator(*_args, **_kwargs):
+                def _wrap(func):
+                    func.__wrapped__ = func  # marker for inspection
+                    return func
+                return _wrap
+            return _decorator
+
+        def __call__(self, *args, **kwargs):  # for ``st.something(...)``
+            raise RuntimeError(
+                "Streamlit is not installed; dashboard functions are unavailable."
+            )
+
+    st = _StreamlitStub()  # type: ignore[assignment]
+
 try:
     import plotly.express as px
     import plotly.graph_objects as go

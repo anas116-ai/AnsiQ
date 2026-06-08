@@ -27,6 +27,8 @@ dependencies = [
     "prompt-toolkit>=3.0",
     "aiofiles>=24.0",
     "jinja2>=3.0",
+    # Required by ansiq.api.routes.agents for SSE streaming responses.
+    "sse_starlette>=2.0",
 ]
 
 [project.optional-dependencies]
