@@ -119,6 +119,12 @@ class Organization(Base):
     subscriptions: Mapped[list[Subscription]] = relationship(
         back_populates="organization", cascade="all, delete-orphan"
     )
+    agents: Mapped[list["Agent"]] = relationship(
+        back_populates="organization", cascade="all, delete-orphan"
+    )
+    crews: Mapped[list["CrewModel"]] = relationship(
+        back_populates="organization", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Organization {self.slug} ({self.plan.value})>"
@@ -145,6 +151,96 @@ class Workspace(Base):
 
     def __repr__(self) -> str:
         return f"<Workspace {self.slug}>"
+
+
+class Agent(Base):
+    """AI Agent configuration within a SaaS organization."""
+
+    __tablename__ = "agents"
+
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), nullable=False, index=True
+    )
+    workspace_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("workspaces.id")
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., gpt-4, claude-3
+    instructions: Mapped[str | None] = mapped_column(Text)
+    temperature: Mapped[float] = mapped_column(default=0.7)
+    max_tokens: Mapped[int] = mapped_column(default=4096)
+    tools: Mapped[list | None] = mapped_column(JSON, default=list)
+    system_prompt: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"))
+    settings: Mapped[dict | None] = mapped_column(JSON, default=dict)
+    agent_metadata: Mapped[dict | None] = mapped_column(JSON, default=dict)
+
+    # Relationships
+    organization: Mapped[Organization] = relationship(back_populates="agents")
+
+    # Indexes for common queries
+    __table_args__ = (
+        Index("ix_agents_org", "organization_id"),
+        Index("ix_agents_workspace", "workspace_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Agent {self.name} (model={self.model})>"
+
+
+class CrewModel(Base):
+    """Persisted crew definitions for SaaS users.
+
+    Stores agents and tasks as JSON blobs and delegates execution to
+    `ansiq.core.crew.Crew` at runtime.
+    """
+
+    __tablename__ = "crews"
+
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    agents: Mapped[list] = mapped_column(JSON, default=list)
+    tasks: Mapped[list] = mapped_column(JSON, default=list)
+    process: Mapped[str] = mapped_column(String(32), default="pipeline")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"))
+
+    # Relationships
+    organization: Mapped[Organization] = relationship(back_populates="crews")
+
+    __table_args__ = (
+        Index("ix_crews_org", "organization_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Crew {self.name} (process={self.process})>"
+
+
+class TaskModel(Base):
+    """Persisted task definitions for SaaS users."""
+
+    __tablename__ = "tasks"
+
+    organization_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("organizations.id"), nullable=False, index=True
+    )
+    workspace_id: Mapped[str | None] = mapped_column(String(36), ForeignKey("workspaces.id"))
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    expected_output: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[str | None] = mapped_column(String(36), ForeignKey("users.id"))
+
+    __table_args__ = (
+        Index("ix_tasks_org", "organization_id"),
+    )
+
+    def __repr__(self) -> str:
+        return f"<Task {self.name}>"
 
 
 # ══════════════════════════════════════════════════════════════════════════
