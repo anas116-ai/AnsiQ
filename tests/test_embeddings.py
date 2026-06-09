@@ -16,6 +16,17 @@ from ansiq.embeddings.base import EmbeddingProvider, EmbeddingResult
 from ansiq.embeddings.local_provider import LocalEmbedding
 from ansiq.embeddings.openai_provider import OpenAIEmbedding
 
+try:
+    import sentence_transformers  # noqa: F401
+    _HAS_SENTENCE_TRANSFORMERS = True
+except ImportError:
+    _HAS_SENTENCE_TRANSFORMERS = False
+
+skipif_no_local = pytest.mark.skipif(
+    not _HAS_SENTENCE_TRANSFORMERS,
+    reason="sentence-transformers not installed; install with: pip install 'ansiq[embeddings]'",
+)
+
 
 class TestEmbeddingResult:
     """Tests for the EmbeddingResult data class."""
@@ -165,6 +176,7 @@ class TestLocalEmbedding:
             with pytest.raises(ImportError, match="sentence-transformers"):
                 provider._load_model()
 
+    @skipif_no_local
     @pytest.mark.asyncio
     async def test_embed_real_model(self):
         """Test actual embedding with sentence-transformers model."""
@@ -179,6 +191,7 @@ class TestLocalEmbedding:
         norm = math.sqrt(sum(v * v for v in result.vector))
         assert abs(norm - 1.0) < 0.01
 
+    @skipif_no_local
     @pytest.mark.asyncio
     async def test_embed_batch_real(self):
         """Test batch embedding with multiple texts."""
@@ -193,6 +206,7 @@ class TestLocalEmbedding:
         sim = provider.cosine_similarity(results[0].vector, results[1].vector)
         assert 0.0 <= sim <= 1.0
 
+    @skipif_no_local
     @pytest.mark.asyncio
     async def test_embed_empty_string(self):
         """Test embedding an empty string produces a non-zero vector."""

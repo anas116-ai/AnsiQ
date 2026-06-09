@@ -6,6 +6,17 @@ import pytest
 
 from ansiq.vectordb.base import SearchResult, VectorDBProvider
 
+try:
+    import chromadb  # noqa: F401
+    _HAS_CHROMADB = True
+except ImportError:
+    _HAS_CHROMADB = False
+
+skipif_no_chromadb = pytest.mark.skipif(
+    not _HAS_CHROMADB,
+    reason="chromadb not installed; install with: pip install chromadb",
+)
+
 
 class TestSearchResult:
     """Tests for SearchResult data class."""
@@ -27,6 +38,7 @@ class TestSearchResult:
         assert r.payload == {}
 
 
+@skipif_no_chromadb
 class TestChromaDBProvider:
     """Tests for ChromaDB provider — each test gets an isolated collection."""
 
