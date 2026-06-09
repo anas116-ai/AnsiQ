@@ -19,5 +19,7 @@ node_modules/
 .venv/
 .idea/
 .vscode/
+# Exclude all markdown files EXCEPT README.md which is needed for pip install
 *.md
+!README.md
 LICENSE
