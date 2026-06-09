@@ -337,10 +337,10 @@ if TEMPLATES_DIR.exists():
 
 from saas.routes.account import router as account_router
 from saas.routes.agents import router as agents_router
-from saas.routes.crews import router as crews_router
-from saas.routes.tasks import router as tasks_router
 from saas.routes.api import router as api_router
 from saas.routes.auth import router as auth_router
+from saas.routes.crews import router as crews_router
+from saas.routes.tasks import router as tasks_router
 
 app.include_router(auth_router)
 app.include_router(api_router)

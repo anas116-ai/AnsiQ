@@ -119,10 +119,10 @@ class Organization(Base):
     subscriptions: Mapped[list[Subscription]] = relationship(
         back_populates="organization", cascade="all, delete-orphan"
     )
-    agents: Mapped[list["Agent"]] = relationship(
+    agents: Mapped[list[Agent]] = relationship(
         back_populates="organization", cascade="all, delete-orphan"
     )
-    crews: Mapped[list["CrewModel"]] = relationship(
+    crews: Mapped[list[CrewModel]] = relationship(
         back_populates="organization", cascade="all, delete-orphan"
     )
 

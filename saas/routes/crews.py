@@ -6,14 +6,14 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import select, func
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ansiq.core.crew import Crew as CoreCrew, ProcessType
 from ansiq.core.agent import Agent as CoreAgent
+from ansiq.core.crew import Crew as CoreCrew
+from ansiq.core.crew import ProcessType
 from ansiq.core.task import Task as CoreTask
-
 from saas.auth import get_current_user
 from saas.database import get_db
 from saas.models import CrewModel, User, UserRole
@@ -164,8 +164,6 @@ async def execute_crew(crew_id: str, req: CrewRunRequest, user: Annotated[User, 
     for t in crew.tasks or []:
         task = CoreTask(description=t.get("description"), expected_output=t.get("expected_output", ""))
         core_tasks.append(task)
-
-    process = ProcessType(crew.process) if crew.process in ProcessType.__members__.values() else ProcessType.PIPELINE
 
     core_crew = CoreCrew(agents=core_agents, tasks=core_tasks, process=ProcessType(crew.process))
     result = await core_crew.kickoff(inputs=req.inputs)

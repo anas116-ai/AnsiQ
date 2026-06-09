@@ -10,7 +10,7 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -291,7 +291,7 @@ async def execute_agent(
     db: AsyncSession = Depends(get_db),
 ):
     """Execute an agent and return streaming results.
-    
+
     This is a placeholder that returns immediate results.
     For production, this should use Server-Sent Events (SSE) for streaming.
     """

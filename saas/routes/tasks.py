@@ -6,13 +6,12 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel, Field, ConfigDict
-from sqlalchemy import select, func
+from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ansiq.core.task import Task as CoreTask
 from ansiq.core.agent import Agent as CoreAgent
-
+from ansiq.core.task import Task as CoreTask
 from saas.auth import get_current_user
 from saas.database import get_db
 from saas.models import TaskModel, User, UserRole
