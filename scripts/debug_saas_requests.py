@@ -1,7 +1,10 @@
+from types import SimpleNamespace
+
 from fastapi.testclient import TestClient
+
 import saas.app as saas_app
 import saas.auth as saas_auth
-from types import SimpleNamespace
+
 
 async def _fake_user_owner(*args, **kwargs):
     return SimpleNamespace(id='test-user', role=getattr(saas_auth,'UserRole',None), organization_id='test-org')

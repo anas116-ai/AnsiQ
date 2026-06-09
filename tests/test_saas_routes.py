@@ -21,17 +21,14 @@ from unittest.mock import patch
 import pytest
 import pytest_asyncio
 from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-import ansiq.llm.openai_provider  # noqa: F401
 import ansiq.llm.ollama_provider  # noqa: F401
-
+import ansiq.llm.openai_provider  # noqa: F401
 import saas.app as saas_app
 import saas.auth as saas_auth
 from saas.database import Base, get_db
 from saas.models import UserRole
-
 
 _TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 _test_engine = create_async_engine(_TEST_DATABASE_URL, echo=False)

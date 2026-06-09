@@ -3,8 +3,9 @@
 import asyncio
 import re
 
-from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
+
+from alembic import context
 
 target_metadata = None
 # TODO: Set to your SQLAlchemy Base.metadata for auto-detection.

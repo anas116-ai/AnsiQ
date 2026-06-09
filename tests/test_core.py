@@ -7,8 +7,7 @@ import pytest
 from ansiq.core.agent import Agent, AgentConfig, AgentIdentity
 from ansiq.core.crew import Crew, CrewResult, ProcessType
 from ansiq.core.flow import Flow, and_, listen, or_, start
-from ansiq.core.state import FlowState as FS
-from ansiq.core.state import StateManager
+from ansiq.core.state import FlowState, StateManager
 from ansiq.core.task import Task
 from ansiq.llm.base import LLMMessage
 
@@ -427,20 +426,20 @@ class TestState:
 
     def test_state_manager_with_initial(self):
         """Test state manager with initial state."""
-        state = FS()
+        state = FlowState()
         sm = StateManager(initial_state=state)
         assert sm.state is not None
 
     def test_state_manager_update(self):
         """Test updating state fields."""
-        state = FS()
+        state = FlowState()
         sm = StateManager(initial_state=state)
         sm.state.completed_steps.append("step_1")
         assert "step_1" in sm.state.completed_steps
 
     def test_state_manager_snapshot_rollback(self):
         """Test snapshot and rollback."""
-        state = FS()
+        state = FlowState()
         sm = StateManager(initial_state=state)
         sm.state.completed_steps.append("step_1")
         sm.snapshot()
@@ -451,21 +450,21 @@ class TestState:
 
     def test_state_manager_record_step(self):
         """Test recording a step."""
-        state = FS()
+        state = FlowState()
         sm = StateManager(initial_state=state)
         sm.record_step("research")
         assert "research" in sm.state.completed_steps
 
     def test_state_manager_record_error(self):
         """Test recording an error."""
-        state = FS()
+        state = FlowState()
         sm = StateManager(initial_state=state)
         sm.record_error("Something went wrong")
         assert "Something went wrong" in sm.state.errors
 
     def test_state_manager_to_dict(self):
         """Test exporting state as dict."""
-        state = FS()
+        state = FlowState()
         sm = StateManager(initial_state=state)
         sm.record_step("step_1")
         d = sm.to_dict()
@@ -476,7 +475,7 @@ class TestState:
         """Test creating state from dict."""
         sm = StateManager.from_dict(
             {"completed_steps": ["step_1"], "errors": [], "metadata": {}},
-            FS,
+            FlowState,
         )
         assert "step_1" in sm.state.completed_steps
 
@@ -488,7 +487,7 @@ class TestState:
 
     def test_flow_state_defaults(self):
         """Test FlowState default values."""
-        state = FS()
+        state = FlowState()
         assert state.metadata == {}
         assert state.errors == []
         assert state.completed_steps == []

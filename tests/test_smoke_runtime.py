@@ -50,7 +50,7 @@ def _build_test_app():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
-    SessionLocal = async_sessionmaker(
+    session_local = async_sessionmaker(
         bind=engine, class_=AsyncSession, expire_on_commit=False,
     )
 
@@ -61,7 +61,7 @@ def _build_test_app():
     asyncio.run(_init())
 
     async def _override_get_db():
-        async with SessionLocal() as session:
+        async with session_local() as session:
             try:
                 yield session
                 await session.commit()

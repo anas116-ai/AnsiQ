@@ -27,7 +27,7 @@ async def demo_memory_with_profile():
     store = FTSMemoryStore()
     episodes = EpisodicMemory(store=store, agent_id="demo_agent")
 
-    ep_id = episodes.begin_episode("Research quantum computing advancements")
+    episodes.begin_episode("Research quantum computing advancements")
     episodes.record_step("Searched arXiv", "Found 10 relevant papers", success=True)
     episodes.record_step("Summarized findings", "Created 3-page summary", success=True)
     episodes.end_episode(summary="Completed quantum computing research")

@@ -217,11 +217,11 @@ async def demo_tool_discovery():
     @ansiq_tool(name="web_search", description="Search the web for information")
     async def web_search(query: str, max_results: int = 10) -> str:
         """Search the web for information.
-        
+
         Args:
             query: The search query
             max_results: Maximum number of results to return
-            
+
         Returns:
             Search results as formatted text
         """
@@ -230,10 +230,10 @@ async def demo_tool_discovery():
     @ansiq_tool(name="calculate", description="Perform mathematical calculations")
     async def calculate(expression: str) -> float:
         """Evaluate a mathematical expression.
-        
+
         Args:
             expression: The mathematical expression to evaluate
-            
+
         Returns:
             The calculated result
         """
@@ -242,11 +242,11 @@ async def demo_tool_discovery():
     @ansiq_tool(name="read_file", description="Read contents of a file")
     async def read_file_tool(path: str, encoding: str = "utf-8") -> str:
         """Read a file from the filesystem.
-        
+
         Args:
             path: Path to the file
             encoding: File encoding (default: utf-8)
-            
+
         Returns:
             File contents as string
         """

@@ -118,7 +118,7 @@ class TestNextRunTime:
 
     def test_next_run_weekday(self):
         """Test next run respects weekday constraints.
-        
+
         Cron weekday: 0=Sun, 1=Mon, ..., 6=Sat
         Python weekday: 0=Mon, 1=Tue, ..., 6=Sun
         So cron 1-5 maps to Mon-Fri = Python 0-4.
